@@ -14,7 +14,7 @@ SILENCE_LIMIT = 130
 
 vad = webrtcvad.Vad(3)
 silent_frames = 0
-stop_requested = False
+silence_detected = False
 
 global_ndarray = None
 model = whisper.load_model(MODEL_TYPE)
@@ -35,8 +35,8 @@ def callback(indata, frames, time, status):
         silent_frames = 0
 
     if silent_frames >= SILENCE_LIMIT:
-        global stop_requested
-        stop_requested = True
+        global silence_detected
+        silence_detected = True
 
 def check_user_input(stop_event):
     while not stop_event.is_set():
@@ -45,14 +45,13 @@ def check_user_input(stop_event):
             stop_event.set()
 
 def main(stop_event):
-    global global_ndarray, silent_frames, stop_requested
-    print('\nActivating wire ...\n')
+    global global_ndarray, silent_frames, silence_detected
 
     with sd.InputStream(samplerate=SAMPLERATE, channels=1, dtype='int16', blocksize=BLOCKSIZE, callback=callback):
         user_input_thread = threading.Thread(target=check_user_input, args=(stop_event,), daemon=True)
         user_input_thread.start()
 
-        while not stop_requested and not stop_event.is_set():
+        while not silence_detected and not stop_event.is_set():
             pass
 
         local_ndarray = global_ndarray.copy()
@@ -62,7 +61,7 @@ def main(stop_event):
         print(result["text"])
 
         silent_frames = 0
-        stop_requested = False
+        silence_detected = False
         print('\033[91m' + 'Recording ' + '\033[0m')
 
     user_input_thread.join()
