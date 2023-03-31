@@ -4,6 +4,9 @@ import whisper
 import sys
 import webrtcvad
 import threading
+import os
+
+# ... (rest of the code remains unchanged)
 
 # SETTINGS
 MODEL_TYPE = "small"
@@ -45,15 +48,13 @@ def check_user_input(stop_event):
         if user_input.lower() == 'stop':
             stop_event.set()
 
-def main(stop_event):
+def transcribe_audio(stop_event):
     global global_ndarray, silent_frames, silence_detected
-    print('\nActivating wire ...\n')
+    transcription = None
 
     with sd.InputStream(samplerate=SAMPLERATE, channels=1, dtype='int16', blocksize=BLOCKSIZE, callback=callback):
-
         user_input_thread = threading.Thread(target=check_user_input, args=(stop_event,), daemon=True)
         user_input_thread.start()
-
         while not stop_event.is_set():
 
             if silence_detected:
@@ -62,18 +63,14 @@ def main(stop_event):
                 global_ndarray = None
                 indata_transformed = local_ndarray.flatten().astype(np.float32) / 32768.0
                 result = model.transcribe(indata_transformed, language=LANGUAGE)
-                print(result["text"])
+                transcription = result["text"]
                 silent_frames = 0
                 silence_detected = False
-                print('\033[91m' + 'Recording ' + '\033[0m')
 
+                break
 
-if __name__ == "__main__":
-    stop_event = threading.Event()
-    try:
-        main(stop_event)
-    except KeyboardInterrupt:
-        sys.exit('\nInterrupted by user')
+    return transcription
+
 
 
 

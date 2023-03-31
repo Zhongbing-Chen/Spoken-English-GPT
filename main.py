@@ -1,35 +1,16 @@
 import asyncio
-import io
+import sys
+import threading
+
 import openai
-import soundfile as sf  # module to handle wav files
-import speech_recognition as sr
-import whisper
-from voice import play_without_saving
 
-
-async def voice_to_text():
-    r = sr.Recognizer()
-    mic = sr.Microphone()
-
-    with mic as source:
-        r.adjust_for_ambient_noise(source)
-        print("Listening...")
-        audio = r.listen(source)
-        print(audio)
-        # Get the WAV data from the AudioData object
-        wav_data = audio.get_wav_data(convert_rate=16000, convert_width=2)
-
-        audio_buffer = io.BytesIO(wav_data)
-        audio_data, rate = sf.read(audio_buffer, dtype='float32')  # Read the audio file data from the buffer
-
-    model = whisper.load_model('base')
-    transcript = model.transcribe(audio_data)
-    return transcript['text']
+from record_and_transcribe import transcribe_audio
+from audio_player import play_without_saving
 
 
 def text_to_gpt(words):
     print(words)
-    openai.api_key = 'Your Key'
+    openai.api_key = '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'
     completion = openai.ChatCompletion.create(
         model="gpt-3.5-turbo-0301",
         messages=[
@@ -41,11 +22,19 @@ def text_to_gpt(words):
 
 
 async def main():
-    while True:
-        input_words = await voice_to_text()
-        content_gpt = text_to_gpt(input_words)
-        await play_without_saving(content_gpt)
+    stop_event = threading.Event()
+    try:
+        print("Activating Wire, prepare to speak please. If you need to stop this program, type in 'stop'")
+        while not stop_event.is_set():
+            transcribed_text = transcribe_audio(stop_event)
+
+            if transcribed_text is not None:
+                gpt_content = text_to_gpt(transcribed_text)
+                await play_without_saving(gpt_content)
+                print('\033[91m' + 'Recording ' + '\033[0m')
+    except KeyboardInterrupt:
+        sys.exit('\nInterrupted by user')
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())

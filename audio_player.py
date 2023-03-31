@@ -8,6 +8,7 @@ import soundfile as sf
 voice = "en-GB-SoniaNeural"
 Logger = logging.getLogger(__name__)
 
+
 async def say(message, **opt):
     mp3 = b''
     tts = edge_tts.Communicate(
@@ -28,7 +29,6 @@ async def say(message, **opt):
     return mp3
 
 
-
 async def play_without_saving(message):
     bytes = await say(message)
     if bytes:
@@ -41,6 +41,7 @@ async def play_without_saving(message):
 # Test the function
 async def main():
     await play_without_saving("Hello, how are you today?")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
