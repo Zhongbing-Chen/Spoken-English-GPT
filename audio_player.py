@@ -34,7 +34,8 @@ async def play_without_saving(message):
     if bytes:
         with io.BytesIO(bytes) as audio_file:
             audio_data, samplerate = sf.read(audio_file, dtype='int16')
-            print(message)
+            print("[GPT-3.5 Turbo]: ", message)
+            print('[Playing Response]')
             sd.play(audio_data, samplerate, blocking=True)
 
 

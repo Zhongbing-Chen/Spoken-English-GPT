@@ -58,7 +58,7 @@ def transcribe_audio(stop_event):
         while not stop_event.is_set():
 
             if silence_detected:
-                print('\033[91m' + 'Recording Done ' + '\033[0m')
+                print('\n\033[91m' + 'Recording Done ' + '\033[0m\n')
                 local_ndarray = global_ndarray.copy()
                 global_ndarray = None
                 indata_transformed = local_ndarray.flatten().astype(np.float32) / 32768.0

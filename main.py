@@ -9,8 +9,8 @@ from audio_player import play_without_saving
 
 
 def text_to_gpt(words):
-    print(words)
-    openai.api_key = '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'
+    print("[Transcription]: ", words)
+    openai.api_key = 'Your key'
     completion = openai.ChatCompletion.create(
         model="gpt-3.5-turbo-0301",
         messages=[
@@ -31,7 +31,7 @@ async def main():
             if transcribed_text is not None:
                 gpt_content = text_to_gpt(transcribed_text)
                 await play_without_saving(gpt_content)
-                print('\033[91m' + 'Recording ' + '\033[0m')
+                print('\n\033[91m' + 'Recording ' + '\033[0m')
     except KeyboardInterrupt:
         sys.exit('\nInterrupted by user')
 
